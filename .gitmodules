@@ -1,0 +1,3 @@
+[submodule "Theano_Tile_Coding"]
+	path = Theano_Tile_Coding
+	url = https://github.com/mohammadpz/Theano_Tile_Coding.git

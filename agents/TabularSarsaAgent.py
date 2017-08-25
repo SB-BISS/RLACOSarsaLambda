@@ -7,9 +7,9 @@ from scipy.spatial.distance import pdist, squareform
 class TabularSarsaAgent(object):
     """
     Agent implementing tabular Sarsa-learning.
-    """
-    #check indexing in python
+    The observation space must be discretized according to the environment being studied.
     
+    """
     
     def __init__(self, observation_space, action_space, **userconfig):
         #if not isinstance(observation_space, discrete.Discrete):

@@ -6,3 +6,4 @@ The main purpose of this library is to present a heuristically accelerated appro
 model in which the heuristic is dynamically calculated using an ACO algoritm. 
 
 For the moment, the library has examples for the Mountain Car and Mountain Car 3D examples.
+

@@ -1,3 +1,6 @@
 [submodule "tilecoding"]
 	path = tilecoding
 	url = https://github.com/gehring/tilecoding.git
+[submodule "gym-maze"]
+	path = gym-maze
+	url = https://github.com/tuzzer/gym-maze.git

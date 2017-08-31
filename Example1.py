@@ -1,6 +1,5 @@
 import gym
 from gym import envs
-from gym_m3d.envs.m3d_environment import m3d
 from agents import TabularSarsaAgent
 from agents import ApproximatedSarsaLambdaAgent
 from agents import HAApproximatedSarsaLambdaAgent

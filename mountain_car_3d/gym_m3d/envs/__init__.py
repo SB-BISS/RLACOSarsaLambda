@@ -1,1 +1,0 @@
-from gym_m3d.envs.m3d_environment import m3d

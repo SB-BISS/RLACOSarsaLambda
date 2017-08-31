@@ -1,5 +1,0 @@
-gym_m3d.egg-info/PKG-INFO
-gym_m3d.egg-info/SOURCES.txt
-gym_m3d.egg-info/dependency_links.txt
-gym_m3d.egg-info/requires.txt
-gym_m3d.egg-info/top_level.txt

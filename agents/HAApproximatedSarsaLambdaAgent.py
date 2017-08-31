@@ -9,7 +9,7 @@ import sys
 
 class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
     '''
-    Agent implementing approximated Sarsa-learning with traces.
+    Agent implementing approximated Sarsa-learning with traces and ACO pheromone
     observation_space_mins = an ordered array with minimum values for each of the features of the exploration space
     observation_space_maxs = an ordered array with maximum values for each of the features of the exploation space
     num tiles = how many times do we split a dimension
@@ -55,7 +55,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
             possible_actions_values_pheromones.append(np.sum(self.select_state_action_weights(self.pheromone_trace,observation,i)))
         
         
-        
+        #print possible_actions_values
         chance = np.random.random() 
         if chance> eps:
             action = np.argmax(possible_actions_values)
@@ -74,6 +74,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
             
         else:
             action=self.action_space.sample()
+           
             #action = np.random.randint(0,3)
         return action
     
@@ -107,14 +108,20 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                
                 a = self.act(s)
                 dict = {"state":s,"action":a}
+                
                 Trajectory.append(dict)
                 
                 sp, reward, done, _ = env.step(a)
                 future = 0.0
-            
                 #if not done:
                     #future = np.max(q[obs2.item()])
+                
+                
+                
                 ap= self.act(sp)
+                
+               
+               
                 
                 index_present = self.tile_coder[a].__call__(s)
                 index_future = self.tile_coder[ap].__call__(sp)
@@ -124,10 +131,10 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 future_value = np.sum(self.select_state_action_weights(self.tile_code_weights, sp, ap))    
                 present_value = np.sum(self.select_state_action_weights(self.tile_code_weights, s, a)) 
                 
-               
+                
                 
                 delta = reward + self.gamma*future_value- present_value
-                #print delta
+              
                 self.tile_code_trace_weights[a,index_present] = 1
                 
                 self.tile_code_weights[a,index_present] = self.tile_code_weights[a,index_present] + self.lmbd*delta*self.alpha*self.tile_code_trace_weights[a,index_present] 
@@ -217,98 +224,5 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
            self.pheromone_trace[a,index_pheromone_tiles] = self.pheromone_trace[a,index_pheromone_tiles] + cost
            self.pheromone_trace = self.rho*self.pheromone_trace
                         
-'''
-                
-function [Trace,StructTiling] = UpdateQLearningTilesMountainCarNoHashingTrueOnline(StructTiling, r, alpha, gamma,lambda,position, newposition, Trace, Traj )
-% UpdateQ update de Qtable and return it using Whatkins Q-Learing
-% s1: previous state before taking action (a)
-% s2: current state after action (a)
-% r: reward received from the environment after taking action (a) in state
-%                                             s1 and reaching the state s2
-% a:  the last executed action
-% tab: the current Qtable
-% alpha: learning rate
-% gamma: discount factor
-% Q: the resulting Qtable
-% UpdateQ update de Qtable and return it using Whatkins Q-Learing
-% s1: previous state before taking action (a)
-% s2: current state after action (a)
-% r: reward received from the environment after taking action (a) in state
-%                                             s1 and reaching the state s2
-% a:  the last executed action
-% tab: the current Qtable
-% alpha: learning rate
-% gamma: discount factor
-% Q: the resulting Qtable
 
-   
-    
-   Tiles =   StructTiling.tc;  
-   TilesWeight = StructTiling.tw;
-   TilesWeightOld = StructTiling.twold;
-   
-   
-   StructTiling.twold = StructTiling.tw;
-
-   TilingInfo = StructTiling.ti;
-   
-  %old
-  [vali idxtilei ] = tiling_get(Tiles,TilesWeightOld,TilingInfo,position);
-  
-  %current
-  [valii idxtileii ] = tiling_get(Tiles,TilesWeight,TilingInfo,position);
-  
-  %next
-  [val2 idxtile2 ] = tiling_get(Tiles,TilesWeight,TilingInfo,newposition);
-   
-  %position
-  %newposition
-
-    NeT =  val2; %sum(WeightsNew);
-    Neti = vali;
-    Netii = valii;
-    
-   % if ismember(A(1),BestPerformingTiles)
-    
-   %     r = -2;
-   % end    
-    
-   %if ~isempty(SF)  
-    %ThetaError = (r+ gamma*NeT - Old*(Theta-SF)');
-    %ThetaError
-   %else
-    ThetaError = (r  + (gamma*NeT - Neti));  
-    
-   %end    
-   
-       
-    Trace = gamma*lambda*Trace;
-    Trace(idxtilei) = Trace(idxtilei)+  (alpha)*(1  - lambda*gamma*Trace(idxtilei));
-    
-    
-    
-    %Theta = Theta + ((alpha/features_n)*ThetaError).*Trace; %SF(A);
-    
-    %Theta(A) = Theta(A) + ((alpha/features_n)*ThetaError).*Trace(A); %SF(A);
-    
-    %[v, i, j, wdata]  = tiling_update(Tiles,TilesWeight,TilingInfo,position,(alpha/features_n)*ThetaError,0);
-    % idxtile
-    %size(TilesWeight(idxtile))
-    %size(Trace(idxtile))
-    %size(ThetaError)
-    
-    TilesWeight(idxtilei) = TilesWeight(idxtilei) + ThetaError*Trace(idxtilei) +alpha*(Neti -Netii);
- 
-    
-    StructTiling.tw = TilesWeight;
-  
-    
-    
-    
-end    
-    %Theta
-    
-%TD_error =   ((r + gamma*max(Q(sp,:))) - Q(s,a));
-%Q(s,a) =  Q(s,a) + alpha * TD_error;
-'''                
     

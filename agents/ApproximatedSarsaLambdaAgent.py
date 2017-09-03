@@ -118,9 +118,14 @@ class ApproximatedSarsaLambdaAgent(object):
         #self.trace= self.create_state_action_table() # reset
         #trace = self.trace
         #self.tile_coder_traces.reset() # reset replacing traces
-  
-        self.tile_code_trace_weights = self.tile_code_trace_weights*0
+        present_value_old = 0
+        
+        if self.strategy=="Replacing":
+            self.tile_code_trace_weights = self.tile_code_trace_weights*0
         #traces = self.tile_coder_traces
+        
+        
+        a = self.act(s)
         
         for t in range(config["n_iter"]):
             
@@ -131,7 +136,6 @@ class ApproximatedSarsaLambdaAgent(object):
             
             if self.strategy=="Replacing":
             
-                a = self.act(s)
                 sp, reward, done, _ = env.step(a)
                 future = 0.0
             
@@ -142,12 +146,11 @@ class ApproximatedSarsaLambdaAgent(object):
                 index_present = self.tile_coder[a].__call__(s)
                 index_future = self.tile_coder[ap].__call__(sp)
                 
-                
-                
                 future_value = np.sum(self.select_state_action_weights(self.tile_code_weights, sp, ap))    
                 present_value = np.sum(self.select_state_action_weights(self.tile_code_weights, s, a)) 
                 
-               
+                if done:
+                    future_value = 0.0
                 
                 delta = reward + self.gamma*future_value- present_value
                 #print delta
@@ -160,14 +163,12 @@ class ApproximatedSarsaLambdaAgent(object):
                 #self.tile_coder_traces = traces
                 
                 s = sp
-                
+                a= ap
                 
             if self.strategy=="TrueOnline":  
                 
-                
-                a = self.act(s)
                 sp, reward, done, _ = env.step(a)
-                future = 0.0
+                #future = 0.0
             
                 #if not done:
                     #future = np.max(q[obs2.item()])
@@ -176,24 +177,33 @@ class ApproximatedSarsaLambdaAgent(object):
                 #index_old_present = self.tile_coder_old[a].__call__(s) # necessary for true online traces
                 index_present = self.tile_coder[a].__call__(s)
                 index_future = self.tile_coder[ap].__call__(sp)
-                 
-                #same indices, different weights
-                future_value = np.sum(self.select_state_action_weights(self.tile_code_weights, sp, ap))    
+                
+                      #same indices, different weights
                 present_value = np.sum(self.select_state_action_weights(self.tile_code_weights, s, a)) 
-                present_value_old = np.sum(self.select_state_action_weights(self.tile_code_weights_old, s, a)) # calculated here
+                future_value = np.sum(self.select_state_action_weights(self.tile_code_weights, sp, ap))
+                
+                if done:
+                    future_value = 0.0 #Very important in TrueOnline.   
+              
+                dutch = (1 -self.alpha*self.gamma*self.lmbd*np.sum(self.tile_code_trace_weights[a,index_present])) # just a value.
+                #print dutch
+                self.tile_code_trace_weights[a,index_present] += dutch
                
                 delta = reward + self.gamma*future_value- present_value
+                delta_q = (present_value - present_value_old)
                 
-                self.tile_code_weights_old = self.tile_code_weights # before it changes, but after I took the value of present_value_old
+                #self.tile_code_weights +=  self.alpha * (delta + present_value - present_value_old) * self.tile_code_trace_weights
+                self.tile_code_weights +=  self.alpha * (delta) * self.tile_code_trace_weights  +  self.alpha*(delta_q)*self.tile_code_trace_weights 
+                self.tile_code_weights[a,index_present] = self.tile_code_weights[a,index_present]- self.alpha *(delta_q)
                 
+                self.tile_code_trace_weights= self.tile_code_trace_weights*self.gamma*self.lmbd 
                 
-                self.tile_code_trace_weights[a,index_present] = self.tile_code_trace_weights[a,index_present] + self.alpha*(1- self.lmbd*self.gamma*self.tile_code_trace_weights[a,index_present]) # add value to the cell 
+             
+                #       
+                present_value_old = future_value
                 
-                self.tile_code_weights[a,index_present] = self.tile_code_weights[a,index_present] + self.lmbd*delta*self.alpha*self.tile_code_trace_weights[a,index_present] + self.alpha*(present_value-present_value_old)
-                self.tile_code_trace_weights= self.tile_code_trace_weights*self.gamma*self.lmbd # discount all the old values after application
-                #time lag?
                 s = sp
-                
+                a= ap
             
             
             if done: # something wrong in MC

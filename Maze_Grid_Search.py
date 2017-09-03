@@ -1,3 +1,12 @@
+'''
+This is a GRID search to find the best parameters of an algorithm.
+In future developments it will be parallelized.
+
+'''
+
+
+
+
 import gym
 from gym import envs
 from agents import TabularSarsaAgent
@@ -103,7 +112,7 @@ for eps in eps_pos:
                         total_result.append({"parameters": [eps,rho,psi,dis,dis,alpha] , "times":times/episodes, "results":results/episodes, "cumulative_sum": np.sum(results/episodes)})
                          #   env.step(env.action_space.sample()) # take a random action
                         z = z+1
-                        with open("GridSearchMaze_"+algo+".pkl", 'wb') as f:
+                        with open("GridSearchMaze_"+algo+"_" + strat + "_" + hard_soft + ".pkl", 'wb') as f:
                             pickle.dump(total_result, f)
                             
 

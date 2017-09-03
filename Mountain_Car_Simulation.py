@@ -16,23 +16,23 @@ env.reset()
 
 obs_mins = env.observation_space.low
 obs_maxs = env.observation_space.high #[env.observation_space[0].max_value, env.observation_space[1].max_value]
-discretizations = [9,8]
+discretizations = [8,8]
 
 #Tabular Sarsa + Replacing Elegibility traces
 #ag = TabularSarsaAgent.TabularSarsaAgent(discretize(),env.action_space)
 #Tile coding Sarsa + Replacing Elegibility Traces
-config = {  "Strategy" : "Replacing",
+config = {  "Strategy" : "TrueOnline",
             "decrease_exploration" : True,
             "learning_rate" : 0.5,
             "eps": 0.025,            # Epsilon in epsilon greedy policies
             "lambda":0.9,
             "discount": 1,
-            "n_iter": 500} 
+            "n_iter": env._max_episode_steps} 
 
 #Change the agent here.
 
 #ag = ApproximatedSarsaLambdaAgent.ApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[5], my_config=config)
-ag = HAApproximatedSarsaLambdaAgent.HAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[5], my_config=config)
+ag = HAApproximatedSarsaLambdaAgent.HAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[8], my_config=config)
 
 for i in range(1000):
     rend = False

@@ -97,12 +97,14 @@ class TabularSarsaAgent(object):
         q = self.q
         self.trace= self.create_state_action_table() # reset
         trace = self.trace
+        action = self.act(s)
+        
         for t in range(config["n_iter"]):
             
             if self.decrease_exploration:
                 self.config["eps"] = self.config["eps"]*0.99
             
-            action = self.act(s)
+            
             sp, reward, done, _ = env.step(action)
             future = 0.0
             
@@ -127,7 +129,7 @@ class TabularSarsaAgent(object):
             self.trace = trace
             
             s = sp
-            
+            action = actionp
             if done: # something wrong in MC
                 self.last_steps.append(t)
                 print s

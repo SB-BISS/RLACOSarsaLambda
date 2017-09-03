@@ -1,14 +1,5 @@
 
 
-'''
-
-This function is useful with the mountain car problem
-it discretize the state space in 10 states for the distance
-and 5 states for the velocity.
-
-'''
-
-
 def discretize_mountain_car():    
         # state discretization for the mountain car problem
         xdiv  = (0.6-(-1.2))   / 10.0

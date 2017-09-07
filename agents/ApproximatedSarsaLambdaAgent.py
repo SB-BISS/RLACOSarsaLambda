@@ -5,8 +5,10 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from tilecoding.representation import TileCoding
 
-class ApproximatedSarsaLambdaAgent(object):
-    '''
+
+
+'''
+    @author Stefano Bromuri
     Agent implementing approximated Sarsa-learning with traces.
     observation_space_mins = an ordered array with minimum values for each of the features of the exploration space
     observation_space_maxs = an ordered array with maximum values for each of the features of the exploation space
@@ -17,6 +19,9 @@ class ApproximatedSarsaLambdaAgent(object):
     TrueOnline Model, True online model!
     
     '''
+
+class ApproximatedSarsaLambdaAgent(object):
+    
     
     def __init__(self, observation_space_mins, observation_space_maxs, actions, num_tiles_l, num_tilings_l,  **userconfig):
         #if not isinstance(observation_space, discrete.Discrete):
@@ -29,6 +34,7 @@ class ApproximatedSarsaLambdaAgent(object):
         self.action_n = actions.n
         self.config = {
             "Strategy" : "Replacing",
+            "decrease_exploration_rate": 0.99,
             "decrease_exploration" : True,
             "learning_rate" : 0.5,
             "eps": 0.025,            # Epsilon in epsilon greedy policies
@@ -47,6 +53,7 @@ class ApproximatedSarsaLambdaAgent(object):
         self.lmbd = self.config["lambda"]
         self.gamma = self.config["discount"]
         self.decrease_exploration = self.config["decrease_exploration"]
+        self.decrease_exploration_rate = self.config["decrease_exploration_rate"]
         
         self.tile_coder = {}
         self.tile_coder_traces = {}
@@ -130,7 +137,7 @@ class ApproximatedSarsaLambdaAgent(object):
         for t in range(config["n_iter"]):
             
             if self.decrease_exploration:
-                self.config["eps"] = self.config["eps"]*0.99
+                self.config["eps"] = self.config["eps"]*self.decrease_exploration_rate
             
             #print s
             
@@ -206,8 +213,14 @@ class ApproximatedSarsaLambdaAgent(object):
                 a= ap
             
             
-            if done: # something wrong in MC
+            if done: # 
                 self.last_steps.append(t)
+                
+                #if t == env._max_episode_steps-1: #failure
+                    #self.tile_code_weights *= 0.0
+                    #self.tile_code_trace_weights *= 0.0
+                    #print "Reset"
+                
                 #print s
                 break
             

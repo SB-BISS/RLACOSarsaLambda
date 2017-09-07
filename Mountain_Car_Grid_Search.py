@@ -24,6 +24,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from gym_maze.envs.maze_env import *
 import time
+from model import mc_model
+
 import pickle
 
 print(envs.registry.all())
@@ -65,7 +67,7 @@ Strategies = ["Replacing","TrueOnline"]
 
 algo = algorithms[1]
 strat = Strategies[1]
-hard_soft = "soft"
+hard_soft = "hard"
 
 z= 0 #counter
 
@@ -82,6 +84,7 @@ for eps in eps_pos:
                                   "learning_rate" : alpha,
                                   "psi": psi,
                                   "rho": rho,
+                                  "model" : mc_model.mc_model(),
                                   "eps": eps,
                                   "nu":nu,            # Epsilon in epsilon greedy policies
                                   "lambda":lmbd[0],

@@ -86,11 +86,13 @@ def savitzky_golay(y, window_size=5, order=1, deriv=0, rate=1):
 def set_maze_series():
     with open("Maze_simulation_true_online_no_heuristics.pkl", "rb") as f:
         series = pickle.load(f)
-    with open("Maze_simulation_true_online_heuristics_hard.pkl", "rb") as f:
+    with open("Maze_simulation_true_online_heuristics_hard2.pkl", "rb") as f:
         series2 = pickle.load(f)       
-    with open("Maze_simulation_true_online_heuristics_soft.pkl", "rb") as f:
+    with open("Maze_simulation_true_online_heuristics_hard_model_based.pkl", "rb") as f:
         series3 = pickle.load(f)
-    return series,series2,series3
+    with open("Maze_simulation_true_online_static_heuristics.pkl", "rb") as f:
+        series4 = pickle.load(f)
+    return series,series2,series3,series4
 
 
 def set_m3d_series():
@@ -124,11 +126,12 @@ def set_mc_series_rep():
     return series,series2,series3
 
 
-series,series2,series3=set_m3d_series()
+series,series2,series3,series4=set_maze_series()
 
 print len(series)
 print len(series2)
 print len(series3)   
+print len(series4)
    
 mean_s = np.average(series,axis=0)
 std = np.std(series,axis=0)/np.sqrt(len(series))
@@ -140,15 +143,18 @@ std_hard = np.std(series2,axis=0)/np.sqrt(len(series2))
 mean_soft = np.average(series3,axis=0)
 std_soft = np.std(series3,axis=0)/np.sqrt(len(series3))
 
+mean_heur = np.average(series4,axis=0)
+std_heur = np.std(series4,axis=0)/np.sqrt(len(series4))
 
 
 filtered_mean_s =savitzky_golay(mean_s)
 filtered_mean_hard =savitzky_golay(mean_hard)
 filtered_mean_soft =savitzky_golay(mean_soft)
+filtered_mean_heur =savitzky_golay(mean_heur)
 
 #serie= pd.Series(mean_s)
 #serie.plot()
-#plt.semilogy()
+plt.semilogy()
 plt.plot(range(len(mean_s)),filtered_mean_s,color="b")
 
 minim = np.argmin(mean_s)
@@ -167,6 +173,12 @@ print np.min(mean_soft)
 print std_soft[minim]
 
 
+plt.plot(range(len(mean_heur)),filtered_mean_heur,color="black")
+
+minim = np.argmin(mean_heur)
+print np.min(mean_heur)
+print std[minim]
+
 
 
 plt.fill_between(range(len(filtered_mean_s)),filtered_mean_s-2*std,filtered_mean_s+2*std, color="b",alpha=0.2)
@@ -174,4 +186,8 @@ plt.fill_between(range(len(filtered_mean_s)),filtered_mean_s-2*std,filtered_mean
 plt.fill_between(range(len(filtered_mean_hard)),filtered_mean_hard-2*std_hard,filtered_mean_hard+2*std_hard, color="r",alpha=0.2)
 
 plt.fill_between(range(len(filtered_mean_soft)),filtered_mean_soft-2*std_soft,filtered_mean_soft+2*std_soft, color="g",alpha=0.2)
+
+plt.fill_between(range(len(filtered_mean_heur)),filtered_mean_heur-2*std_heur,filtered_mean_heur+2*std_heur, color="black",alpha=0.2)
+
+
 plt.show()

@@ -32,12 +32,12 @@ config_heur = {  "Strategy" : "TrueOnline",
                                   "decrease_exploration" : True,
                                   "descrease_exploration_rate": 0.9, #Mountain Car has a decaying eploration
                                   "learning_rate" : 0.5,
-                                  "psi": 0.3,
+                                  "psi": 0.01,
                                   "rho": 0.99,
                                   "eps": 0.5,
                                   "model": m3d_model(),
                                   "model_based": True,
-                                  "nu":10,            # Epsilon in epsilon greedy policies
+                                  "nu":5,            # Epsilon in epsilon greedy policies
                                   "lambda":0.9,
                                   "discount": 1,
                                   "n_iter": env._max_episode_steps} 
@@ -58,8 +58,8 @@ dict_res = {"series" : total_result,"times":time_result }
 for j in range(100):
     print j
     #Change the agent here.
-    #heur = M3DHeuristic(model= m3d_model(),actions_number=5)
-    heur = heur = LoadableHeuristic("M3DPher.pkl","M3DTrace.pkl",actions_number=5)
+    heur = M3DHeuristic(model= m3d_model(),actions_number=5)
+    #heur = heur = LoadableHeuristic("M3DPher.pkl","M3DTrace.pkl",actions_number=5)
     config_heur["static_heuristic"] =heur
     
     #ag = HAApproximatedSarsaLambdaAgent.HAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
@@ -88,7 +88,7 @@ for j in range(100):
     time_result.append(times)
     dict_res["series"]=total_result
     dict_res["times"]=time_result
-    with open("M3D_simulation_true_online_static_pheromone_heuristic.pkl", 'wb') as f:
+    with open("M3D_simulation_true_online_static_heuristic2f.pkl", 'wb') as f:
         pickle.dump(dict_res, f)#write everything there
     
     

@@ -47,13 +47,13 @@ class m3d(gym.Env):
             velocity_y += math.cos(3*position_y)*(-0.0025)
                     
         if action == 3:
-            velocity_x += 0.002 + math.cos(3*position_x)*(-0.0025)
+            velocity_x += 0.001 + math.cos(3*position_x)*(-0.0025)
         if action == 2:
-            velocity_y += 0.002 + math.cos(3*position_y)*(-0.0025)
+            velocity_y += 0.001 + math.cos(3*position_y)*(-0.0025)
         if action == 1:
-            velocity_x += -0.002 + math.cos(3*position_x)*(-0.0025)
+            velocity_x += -0.001 + math.cos(3*position_x)*(-0.0025)
         if action == 0:
-            velocity_y += -0.002 + math.cos(3*position_y)*(-0.0025)
+            velocity_y += -0.001 + math.cos(3*position_y)*(-0.0025)
         
         #typical limits of mountain car, but in two dimensions
         velocity_x = np.clip(velocity_x, -self.max_speed_x, self.max_speed_x)    
@@ -71,7 +71,11 @@ class m3d(gym.Env):
         if (position_y==self.min_position_y and velocity_y<0): velocity_y = 0
 
         done = bool(position_x >= self.goal_position_x and position_y >= self.goal_position_y)
+        
         reward = -1.0
+        
+        if done:
+            reward = 0.0
 
         self.state = (position_x, velocity_x,position_y,velocity_y)
         return np.array(self.state), reward, done, {}

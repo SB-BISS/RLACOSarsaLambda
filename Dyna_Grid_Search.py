@@ -39,7 +39,7 @@ env =  gym.make("dyna-v0")
 env.seed(7)
 
 env._max_episode_steps = 5000
-repetitions = 10
+repetitions = 25
 episodes = 50
 
 env.reset()
@@ -64,17 +64,20 @@ nu_pos = [1,5,10]
 discount_pos = [0.99] # not discounted
 lmbd = [0.9]# Lambda get the same value...
 alpha_pos = [0.1] #it becomes 0.5/8, given the num tilings above
-eps_pos = [0.01] #decaying exploration
+eps_pos = [0.1] #decaying exploration
 
 # one iteration of the grid search
 
 algorithms = ["NOH","SH","H"]
 Strategies = ["Replacing","TrueOnline"]
 
-algo = algorithms[0]
+algo = algorithms[1]
 strat = Strategies[1]
 hard_soft = "hard"
 model_based = False
+
+if algo == "SH":
+    rho_pos = [0.0]
 
 
 z= 0 #counter

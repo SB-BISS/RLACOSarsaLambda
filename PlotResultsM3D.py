@@ -124,7 +124,7 @@ def set_m3d_series():
         series3 = dict3["series"]
         times3= dict3["times"]
         
-    with open("M3D_simulation_true_online_static_heuristic2.pkl", "rb") as f:
+    with open("M3D_simulation_true_online_static_heuristic2f.pkl", "rb") as f:
         dict4 = pickle.load(f)
         series4 = dict4["series"]
         times4= dict4["times"]
@@ -196,7 +196,7 @@ def set_mc_series_rep():
     return series,series2,series3
 
 
-series,series2,series3,series4,series5, t,t2,t3,t4,t5=set_mc_series_potential()
+series,series2,series3,series4,series5, t,t2,t3,t4,t5=set_m3d_series()
 
 
 def find_best_results(time,series):
@@ -334,7 +334,7 @@ print np.min(mean_soft)
 print std_soft[minim]
 print minim
 
-#plt.plot(range(len(mean_heur)),filtered_mean_heur,color="black", linewidth=lw)
+plt.plot(range(len(mean_heur)),filtered_mean_heur,color="black", linewidth=lw)
 
 print "heuristic"
 minim = np.argmin(mean_heur)
@@ -358,14 +358,14 @@ b=plt.fill_between(range(len(filtered_mean_hard)),filtered_mean_hard-2*std_hard,
 
 c=plt.fill_between(range(len(filtered_mean_soft)),filtered_mean_soft-2*std_soft,filtered_mean_soft+2*std_soft, color="g",alpha=0.4)
 
-#d=plt.fill_between(range(len(filtered_mean_heur)),filtered_mean_heur-2*std_heur,filtered_mean_heur+2*std_heur, color="black",alpha=0.4, label="HA-SARSA($\lambda$)")
+d=plt.fill_between(range(len(filtered_mean_heur)),filtered_mean_heur-2*std_heur,filtered_mean_heur+2*std_heur, color="black",alpha=0.4, label="HA-SARSA($\lambda$)")
 
 e=plt.fill_between(range(len(filtered_mean_heur_p)),filtered_mean_heur_p-2*std_heur_p,filtered_mean_heur_p+2*std_heur_p, color="orange",alpha=0.4, label="HA-SARSA($\lambda$)")
 
 
-plt.legend(["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","RS-BACKWARD","RS-SARSA($\lambda$)+Pheromone"])
+#plt.legend(["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","RS-BACKWARD","RS-SARSA($\lambda$)+Pheromone"])
 
-#plt.legend( ["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","AP-HARL-FORWARD","HA-SARSA($\lambda$)","HA-SARSA($\lambda$)+Pheromone"])
+plt.legend( ["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","AP-HARL-FORWARD","HA-SARSA($\lambda$)","HA-SARSA($\lambda$)+Pheromone"])
 plt.grid(b=True, which='major', color='black', linestyle='-')
 plt.grid(b=True, which='minor', color='black', linestyle='--')
 plt.minorticks_on()

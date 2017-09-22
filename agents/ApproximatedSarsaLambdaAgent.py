@@ -28,7 +28,7 @@ class ApproximatedSarsaLambdaAgent(object):
         #    raise UnsupportedSpace('Observation space {} incompatible with {}. (Only supports Discrete observation spaces.)'.format(observation_space, self))
         #if not isinstance(action_space, discrete.Discrete):
         #    raise UnsupportedSpace('Action space {} incompatible with {}. (Only supports Discrete action spaces.)'.format(action_space, self))
-       
+        self.num_tiling = num_tilings_l[0]
         self.last_steps = []
         self.action_space = actions
         self.action_n = actions.n
@@ -201,7 +201,7 @@ class ApproximatedSarsaLambdaAgent(object):
                 
                 #self.tile_code_weights +=  self.alpha * (delta + present_value - present_value_old) * self.tile_code_trace_weights
                 self.tile_code_weights +=  self.alpha * (delta) * self.tile_code_trace_weights  +  self.alpha*(delta_q)*self.tile_code_trace_weights 
-                self.tile_code_weights[a,index_present] = self.tile_code_weights[a,index_present]- self.alpha *(delta_q)
+                self.tile_code_weights[a,index_present] = self.tile_code_weights[a,index_present] - self.alpha *(delta_q)
                 
                 self.tile_code_trace_weights= self.tile_code_trace_weights*self.gamma*self.lmbd 
                 

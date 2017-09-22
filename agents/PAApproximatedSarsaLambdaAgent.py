@@ -10,11 +10,12 @@ import time
 import pickle
 
 
-class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
+class PAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
     '''
     @author Stefano Bromuri
     
     Agent implementing approximated Sarsa-learning with traces and ACO pheromone given a model of the environment.
+    This implementation tries to use potentials
     
     You can see this as a pheromone based model learning.
     
@@ -26,8 +27,6 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
     Replacing traces model, typical replacing traces with tile coding
     TrueOnline Model, True online model
     
-    Please notice that in what follows, readability has been preferred to inheritance. So there are long functions
-    and code is duplicated to allow people to understand better what the functions do.
     
     
     '''
@@ -48,6 +47,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
         conf = userconfig.get("my_config")
         self.config.update(conf)
         self.model = self.config["model"]
+        self.heuristic_dynamic = self.config["heuristic_dynamic"]
         self.model_based= self.config["model_based"]
         self.rho = self.config["rho"]
         self.decrease_exploration_rate = self.config["descrease_exploration_rate"]
@@ -68,162 +68,47 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
         else:
             self.hard=False
         
-        
-    #Act overrides the variable  
-      
-    def act(self, observation, eps=None):
-        if eps is None:
-            eps = self.config["eps"]
-        # epsilon greedy.
-        
-        #previous_pheromone_value =
-        
-        
-        possible_actions_values=np.zeros(self.action_n) 
-        possible_actions_values_pheromones = np.zeros(self.action_n)
-        
-        for i in range(0,self.action_n):
-            possible_actions_values[i]=(np.sum(self.select_state_action_weights(self.tile_code_weights,observation,i)))
-            possible_actions_values_pheromones[i]=(np.sum(self.select_state_action_weights(self.pheromone_trace,observation,i)))
-        
-        
-        #print possible_actions_values
-        chance = np.random.random() 
-        if chance> eps:
-            
-            #if there is a success, activate
-            if self.heuristic_activate:  
-                
-                #now select how should the pheromone be considered
-                if self.hard:      
-                    action = self.hard_heuristic(possible_actions_values,possible_actions_values_pheromones)
-                else:
-                    action = self.soft_heuristic(possible_actions_values,possible_actions_values_pheromones)
- 
-            else:
-                action = np.argmax(possible_actions_values)
-            
-        else:
-            action=self.action_space.sample()
-           
-            #action = np.random.randint(0,3)
-        return action
     
+    
+    def set_pheromone_trace(self,TRACE):
+        self.pheromone_trace= TRACE
+    
+    
+    def set_tilecoder(self,TC):
+        self.tile_coder = TC
+    #Act is the same as for ApproximatedSarsaLambda
+    #Not much to do here
+    def calculate_potential_backward(self,observation,action):
+        return (np.sum(self.select_state_action_weights(self.pheromone_trace,observation,action)))
+       
     
     #Model based action.
-    
-    def act2(self, observation, eps=None):
+    #Depending on the next link
+    def calculate_potential_forward(self, observation,action, eps=None):
         if eps is None:
             eps = self.config["eps"]
         # epsilon greedy.
         
         #previous_pheromone_value =
         
-        #previous_values_pheromones = []
-        
+        #previous_values_pheromones = []  
         observations = []
         possible_actions_values_pheromones = []
-        possible_actions_values=[]  
         
-        for actionf in range(self.action_n):
-            possible_actions_values.append(np.sum(self.select_state_action_weights(self.tile_code_weights,observation,actionf)))
-            f_obs = self.model.next_state(observation,actionf) #so this is my next state
+        f_obs = self.model.next_state(observation,action) #so this is my next state
+          
+        
+        pheromone_present= np.sum(self.select_state_action_weights(self.pheromone_trace,observation,action))
+        pheromone_future_transition=[]
             
-            pheromone_present= np.sum(self.select_state_action_weights(self.pheromone_trace,observation,actionf))
-            pheromone_future_transition=[]
-            
-            for f_act in range(self.action_n): # I sum all the pheromone in the next state !
-                    pheromone_future_transition.append(np.sum(self.select_state_action_weights(self.pheromone_trace,f_obs,f_act)))
-            possible_actions_values_pheromones.append(np.max(pheromone_future_transition)+pheromone_present) # as a measure of the variability        
+        for f_act in range(self.action_n): # I sum all the pheromone in the next state !
+                pheromone_future_transition.append(np.sum(self.select_state_action_weights(self.pheromone_trace,f_obs,f_act)))
+        possible_actions_values_pheromones.append(np.max(pheromone_future_transition)+pheromone_present) # as a measure of the variability        
               
-        #print possible_actions_values
-        chance = np.random.random() 
-        if chance> eps:
-            
-            #if there is a success, activate
-            if self.heuristic_activate:  
-                
-                #now select how should the pheromone be considered
-                if self.config["Pheromone_strategy"] == "hard":      
-                    action = self.hard_heuristic(possible_actions_values,possible_actions_values_pheromones)
-                else:
-                    action = self.soft_heuristic(possible_actions_values,possible_actions_values_pheromones)
- 
-            else:
-                action = np.argmax(possible_actions_values)
-            
-        else:
-            action=self.action_space.sample()
-           
+        action = np.argmax(possible_actions_values_pheromones)
+                   
             #action = np.random.randint(0,3)
-        return action
-
-    
-    
-    
-    
-    
-    def hard_heuristic(self,possible_actions_values,possible_actions_values_pheromones):
-        
-        #remember that if action has already the highest pheromon it simply is the best action also for ACO.
-        action = np.argmax(possible_actions_values)
-        #give me the maximum values in the cell
-        action2 = np.argmax(possible_actions_values_pheromones)
-                              
-        #conservatively, SARSA is preferred if the pheromone level is the same        
-        if action!=action2: #and possible_actions_values_pheromones[action]!=possible_actions_values_pheromones[action2]: 
-            
-            val = possible_actions_values[action]
-            val2 = possible_actions_values[action2]
-            difference_term = self.psi*(val-val2 +self.nu) #this plus 1 is nu
-            #print difference_term
-            val2 = val2 + difference_term
-                
-            if val2>val:
-                action = action2
-                #print time.time()
-        return action
-    
-    
-    
-    def soft_heuristic(self,possible_actions_values,possible_actions_values_pheromones):
-        action = np.argmax(possible_actions_values)
-        
-        bias = possible_actions_values/np.sum(possible_actions_values)
-        
-        probs = np.exp(possible_actions_values_pheromones)/np.sum(np.exp(possible_actions_values_pheromones))
-        
-        #renormalize
-        
-        probs = probs/np.sum(probs)
-        
-        action2 =0
-        val_r = np.random.random()
-        
-        cumsumprobs = 0
-        
-        #probabilistic choice
-        for z in range(len(probs)):
-            cumsumprobs = cumsumprobs + probs[z]
-            if val_r <= cumsumprobs:
-                action2 = z
-                
-        #conservatively, SARSA is preferred if the pheromone level is the same        
-        if action!=action2:# and possible_actions_values_pheromones[action]!=possible_actions_values_pheromones[action2]: 
-            val = possible_actions_values[action]
-            val2 = possible_actions_values[action2]
-            difference_term = self.psi*(val-val2 +self.nu) #this plus 1 is nu
-            #print difference_term
-            possible_actions_values[action2] = possible_actions_values[action2] + difference_term
-                
-            actiondel = np.argmax(possible_actions_values)
-               
-            if actiondel!= action:
-                action = actiondel
-                #print time.time()
-                #print probs
-
-        return action
+        return possible_actions_values_pheromones[action]
     
     
 
@@ -245,6 +130,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
         a= self.act(s)
         aold = a
         sold = s
+        old_potential = 0
         
         for t in range(config["n_iter"]):
             
@@ -260,14 +146,21 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 
                 sp, reward, done, _ = env.step(a)
                 
+                
+                ap = self.act(sp) 
+                
+                potential = 0
                 if self.model_based:      
-                    ap= self.act2(sp)
+                    potential= self.calculate_potential_forward(sp,ap)
                 else:
-                    ap = self.act(sp)
+                    potential = self.calculate_potential_backward(sp,ap)
                 
                 
+                index_past = self.tile_coder[aold].__call__(sold)    
                 index_present = self.tile_coder[a].__call__(s)
                 index_future = self.tile_coder[ap].__call__(sp)
+                
+                shaping = self.rho*potential - old_potential
                 
                 future_value = np.sum(self.select_state_action_weights(self.tile_code_weights, sp, ap))    
                 present_value = np.sum(self.select_state_action_weights(self.tile_code_weights, s, a)) 
@@ -276,21 +169,12 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 #move the pheromone away towards good trajectories, and discount it
                 #the idea of this part really is to make the pheromone shape variable in the environment
 
-                pher_future_value = np.sum(self.select_state_action_weights(self.pheromone_trace, sp, ap))    
-                pher_present_value = np.sum(self.select_state_action_weights(self.pheromone_trace, s, a)) 
-              
-                if np.sum(self.pheromone_trace[ap,index_future])<=np.sum(self.pheromone_trace[a,index_present]):
-                    self.pheromone_trace[ap,index_future] = self.rho*self.pheromone_trace[ap,index_future] + (1-self.rho)*self.pheromone_trace[a,index_present] # move the pheromone in
-                else:
-                    self.pheromone_trace[a,index_present] = self.rho*self.pheromone_trace[a,index_present] + (1-self.rho)*self.pheromone_trace[ap,index_future] # move the pheromone in
                 
-                #always discount left state
-                self.pheromone_trace[a,index_present] *= self.rho
                
                 if done:
                     future_value = 0.0
                                 
-                delta = reward + self.gamma*future_value- present_value
+                delta = reward + shaping+ self.gamma*future_value- present_value
                 
                 
                               
@@ -299,7 +183,29 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 self.tile_code_weights[a,index_present] = self.tile_code_weights[a,index_present] + self.lmbd*delta*self.alpha*self.tile_code_trace_weights[a,index_present] 
                 self.tile_code_trace_weights= self.tile_code_trace_weights*self.gamma*self.lmbd
                 
-                a=ap
+                
+                if self.heuristic_activate and self.heuristic_dynamic:
+                    #Reasoning at the transition level, we have to take present, past and future
+                    pher_past_value= np.sum(self.pheromone_trace[aold,index_past])
+                    pher_present_value=np.sum(self.pheromone_trace[a,index_present])#
+                    pher_future_value=np.sum(self.pheromone_trace[ap,index_future])#/(self.num_tiling+1))  
+                    delta_present = ((pher_future_value+pher_present_value)/2 - (pher_present_value+pher_past_value)/2)/(self.num_tiling) #because we are in a link
+                    
+                    if delta_present > 0: #add a positive
+                        self.pheromone_trace[aold,index_past] = self.rho*self.pheromone_trace[aold,index_past] + (1-self.rho)*delta_present
+                        self.pheromone_trace[a,index_present] = self.rho*self.pheromone_trace[a,index_present] + (1-self.rho)*(delta_present)
+                        #self.pheromone_trace[ap,index_future] = self.rho*self.pheromone_trace[ap,index_future] #- (1-self.rho)*(delta_present)
+                    else: #subtract a negative
+                        self.pheromone_trace[a,index_present] = self.rho*self.pheromone_trace[a,index_present] - (1-self.rho)*(delta_present)
+                        self.pheromone_trace[ap,index_future] = self.rho*self.pheromone_trace[ap,index_future] - (1-self.rho)*(delta_present)
+                    
+                    self.pheromone_trace[a,index_present] = self.rho*self.pheromone_trace[a,index_present]
+                 
+                
+                old_potential = potential
+                aold = a
+                sold = s
+                a= ap
                 s = sp
                 
             if self.strategy=="TrueOnline":  
@@ -309,16 +215,21 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 
                 sp, reward, done, _ = env.step(a)
                 
+                ap = self.act(sp) 
+                
+                potential = 0
                 if self.model_based:      
-                    ap= self.act2(sp)
-                    
+                    potential= self.calculate_potential_forward(sp,ap)
                 else:
-                    ap = self.act(sp)
+                    potential = self.calculate_potential_backward(sp,ap)
                 
                 index_past = self.tile_coder[aold].__call__(sold)    
                 index_present = self.tile_coder[a].__call__(s)
                 index_future = self.tile_coder[ap].__call__(sp)
-                
+             
+                #if the concentration of pheromone is bigger ?
+                shaping = (self.gamma*potential- old_potential)/self.num_tiling
+                #print shaping
                  
                 #same indices, different weights
                 future_value = np.sum(self.select_state_action_weights(self.tile_code_weights, sp, ap))    
@@ -330,7 +241,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 dutch = (1 -self.alpha*self.gamma*self.lmbd*np.sum(self.tile_code_trace_weights[a,index_present])) # just a value.
                 self.tile_code_trace_weights[a,index_present] += dutch
                
-                delta = reward + self.gamma*future_value- present_value
+                delta = reward + shaping+self.gamma*future_value- present_value
                 delta_q = (present_value - present_value_old)
                 
                 #self.tile_code_weights +=  self.alpha * (delta + present_value - present_value_old) * self.tile_code_trace_weights
@@ -376,6 +287,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                         #self.pheromone_trace[ap,index_future] -=((1-self.rho)/self.num_tiling)*delta
                         #self.pheromone_trace[ap,index_future] *= self.rho
                         #self.pheromone_trace[a,index_present] *= self.rho
+                old_potential = potential
                 aold = a
                 sold = s
                 a= ap
@@ -389,7 +301,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 result = self.success_invariant(t=t,env=env)
                 
                 
-                if self.heuristic_activate:
+                if self.heuristic_activate and self.heuristic_dynamic:
                     self.handle_trajectory(result = result, t=t, trajectory= self.current_trajectory)
                     self.reinforce_heuristic_model()
                 #done, exit

@@ -32,15 +32,16 @@ class StaticHeuristicApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
         
         my_config = userconfig.get("my_config")
         self.config.update(my_config)
-         
+        self.psi = self.config["psi"]
+        self.nu = self.config["nu"]
          
         
     def act(self, observation, eps=None):
         
         
         if self.config["static_heuristic"]==None:
-            return super.act(self,observation,eps)
-        
+            #return super.act(self,observation,eps)
+            print "NO HEURISTIC DEFINED"
         else:
         
             heur = self.config["static_heuristic"]
@@ -48,16 +49,24 @@ class StaticHeuristicApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
             if eps is None:
                 eps = self.config["eps"]
             # epsilon greedy.
-            preferred_action = heur.get_action(observation)
+            preferred_H_action = heur.get_action(observation)
             possible_actions_values=[] 
             
             for i in range(0,self.action_n):
                 possible_actions_values.append(np.sum(self.select_state_action_weights(self.tile_code_weights,observation,i)))
             
             
+                   
             chance = np.random.random() 
             if chance> eps:
                 action = np.argmax(possible_actions_values)
+                #heuristic part:
+                if preferred_H_action != action:
+                    v1 = possible_actions_values[action] 
+                    v2 = possible_actions_values[preferred_H_action]
+                    v2new = v2+self.psi*(v1-v2 + self.nu)
+                    if v2new> v1:
+                        action = preferred_H_action                
             else:
                 action=self.action_space.sample()
                 #action = np.random.randint(0,3)

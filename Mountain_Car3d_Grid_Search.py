@@ -16,29 +16,31 @@ Discretization = 8,8
 
 
 import gym
+ 
 from gym import envs
 from agents import TabularSarsaAgent
 from agents import ApproximatedSarsaLambdaAgent
 from agents import HAApproximatedSarsaLambdaAgent
-from static_heuristics.MountainCarHeuristic import MountainCarHeuristic
-from agents import StaticHeuristicApproximatedSarsaLambdaAgent 
+from agents import StaticHeuristicApproximatedSarsaLambdaAgent
 
 import numpy as np
 import matplotlib.pyplot as plt
-from gym_maze.envs.maze_env import *
+from gym_m3d.envs.m3d_environment import *
+from model.m3d_model import m3d_model
+from static_heuristics.M3DHeuristic import M3DHeuristic 
 import time
-from model.mc_model import mc_model
+from model import m3d_model
 
 
 import pickle
 
 print(envs.registry.all())
 
-env =  gym.make("MountainCar-v0")
+env =  gym.make("m3d-v0")
 
 env._max_episode_steps = 1000
 repetitions = 25
-episodes = 20
+episodes = 50
 
 env.reset()
 
@@ -46,13 +48,15 @@ obs_mins = env.observation_space.low
 obs_maxs = env.observation_space.high #[env.observation_space[0].max_value, env.observation_space[1].max_value]
 print obs_mins
 print obs_maxs
-discretizations = [10,10] #position and velocity.
-num_tilings = 10
+discretizations = [4,4,4,4] #position and velocity.
+num_tilings = 5
 
 total_result = []
 rend = False # render or not.
 #values for Rho
+
 rho_pos = [0.1,0.3,0.6,0.9,0.99]  # [0.1,0.5,0.99] #3
+
 #values for psi, for the heuristic
 psi_pos = [0.001,0.01,0.1,0.3,0.5]  # [0.001,0.01,0.1,0.3,0.5] # 5
 #values of nu, for the heuristic
@@ -62,7 +66,7 @@ nu_pos = [1,5,10]
 discount_pos = [1] # not discounted
 lmbd = [0.9]# Lambda get the same value. Fixed, following Sutton and Barto book, but only for replacing traces...
 alpha_pos = [0.5] #it becomes 0.5/8, given the num tilings above
-eps_pos = [0.025] #decaying exploration
+eps_pos = [0.0] #decaying exploration
 
 # one iteration of the grid search
 
@@ -71,8 +75,11 @@ Strategies = ["Replacing","TrueOnline"]
 
 algo = algorithms[1]
 strat = Strategies[1]
-hard_soft = "soft"
+hard_soft = "hard"
 model_based = True
+
+if algo == "SH":
+    rho_pos = [0.0] #static, only eta and psi
 
 
 z= 0 #counter
@@ -90,8 +97,8 @@ for eps in eps_pos:
                                   "learning_rate" : alpha,
                                   "psi": psi,
                                   "rho": rho,
-                                  "model" : mc_model(),
-                                  "static_heuristic": MountainCarHeuristic(model= mc_model(),actions_number=3),
+                                  "static_heuristic": M3DHeuristic(model=  m3d_model.m3d_model(),actions_number=5),
+                                  "model" : m3d_model.m3d_model(),
                                   "model_based":model_based,
                                   "eps": eps,
                                   "nu":nu,            # Epsilon in epsilon greedy policies
@@ -109,8 +116,7 @@ for eps in eps_pos:
                             if algo=="NOH":
                                  ag = ApproximatedSarsaLambdaAgent.ApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[num_tilings], my_config=config)
                             elif algo =="SH":
-                                 ag = StaticHeuristicApproximatedSarsaLambdaAgent.StaticHeuristicApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[num_tilings], my_config=config)
-                             
+                                 ag = StaticHeuristicApproximatedSarsaLambdaAgent.StaticHeuristicApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[num_tilings], my_config=config)  
                             else:
                                 ag = HAApproximatedSarsaLambdaAgent.HAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[num_tilings], my_config=config)
                             
@@ -130,7 +136,7 @@ for eps in eps_pos:
                         total_result.append({"parameters": [eps,rho,psi,dis,lmbd,alpha,nu] , "times":times/repetitions, "20thep": results[-1]/repetitions, "results":results/repetitions, "cumulative_sum": np.sum(results/repetitions)})
                          #   env.step(env.action_space.sample()) # take a random action
                         z = z+1
-                        with open("Mountain_car_"+algo+"_" + strat + "_" + hard_soft + "model"+str(model_based)+ ".pkl", 'wb') as f:
+                        with open("M3d_"+algo+"_" + strat + "_" + hard_soft + "model"+str(model_based)+ ".pkl", 'wb') as f:
                             pickle.dump(total_result, f)
                             
 

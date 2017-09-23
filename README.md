@@ -19,3 +19,20 @@ and
 ```bash
 cd gym_m3d
 pip install -e .
+
+This library is written in Python 2.72 and depends on:
+
+Numpy
+Scipy
+Gym
+Pygame
+
+
+If you happen to use this library, please cite it as follows: 
+
+@misc{rlacosl,
+    author = {{Stefano Bromuri}},
+    title = {{RLACOSarsaLambda: A heuristic accelaration and potential based reward shaping library for reinfrocement learning written in Python}},
+    howpublished = {\url{https://github.com/SB-BISS/RLACOSarsaLambda}},
+    note = {Software {L}ibrary}
+}

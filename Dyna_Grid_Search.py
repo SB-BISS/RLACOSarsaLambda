@@ -91,12 +91,11 @@ for eps in eps_pos:
                         
                         config = {  "Strategy" : strat,
                                   "Pheromone_strategy": hard_soft,
-                                  "decrease_exploration" : True, #Mountain Car has a decaying eploration
+                                  "decrease_exploration" : False, #Mountain Car has a decaying eploration
                                   "learning_rate" : alpha,
                                   "psi": psi,
                                   "rho": rho,
                                   "static_heuristic": EuclideanHeuristic(model= dyna_model(),goal=[25,25],actions_number=4),
-                                  "model" : m3d_model.m3d_model(),
                                   "model_based":model_based,
                                   "eps": eps,
                                   "nu":nu,            # Epsilon in epsilon greedy policies
@@ -110,7 +109,8 @@ for eps in eps_pos:
                         results = np.zeros(episodes)
                         print z
                         for j in range(repetitions): # this is to decide for the parameter
-                            
+                            #env.seed(7)
+
                             if algo=="NOH":
                                  ag = ApproximatedSarsaLambdaAgent.ApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[num_tilings], my_config=config)
                             
@@ -130,6 +130,7 @@ for eps in eps_pos:
                                 results[i] = results[i]+res[i]
                                 print res[i]
                                 times[i] = times[i] + tdiff
+                                  
                                 print i
                                 #print (res[-1], [eps,rho,psi,dis,dis,alpha])
                         #in the maze grid search you are looking for the one with the smallest cumulative_sum        

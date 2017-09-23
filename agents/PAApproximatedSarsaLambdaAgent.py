@@ -14,20 +14,13 @@ class PAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
     '''
     @author Stefano Bromuri
     
-    Agent implementing approximated Sarsa-learning with traces and ACO pheromone given a model of the environment.
-    This implementation tries to use potentials
-    
-    You can see this as a pheromone based model learning.
-    
-    observation_space_mins = an ordered array with minimum values for each of the features of the exploration space
-    observation_space_maxs = an ordered array with maximum values for each of the features of the exploation space
-    num tiles = how many times do we split a dimension
-    num tilings = how many overlapping tilings per dimension.
-    
-    Replacing traces model, typical replacing traces with tile coding
-    TrueOnline Model, True online model
-    
-    
+    (PA stands for Potential Accelerated, as opposed to Heuristic Accelerated)
+    This agent implements a Potential Based Reward Shaping model where the potential depends on
+    pheromone traces calculated with the trajectories of the agent. The pheromone trace can be dynamic or static.
+    if static, the algorithm requires to load the pheromone trace and the associated tile coder. If dynamic the algorithm
+    keeps updating the trace after each successful trajectory.
+    The dynamic version is not very effective the MDP process is too slow at updating the state-action values. 
+    The static version works well with a good heuristic.
     
     '''
     

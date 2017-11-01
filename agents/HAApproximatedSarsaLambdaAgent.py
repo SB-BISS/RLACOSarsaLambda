@@ -29,6 +29,15 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
     Please notice that in what follows, readability has been preferred to inheritance. So there are long functions
     and code is duplicated to allow people to understand better what the functions do.
     
+    For the parameters, look in the superclass for the RL part. 
+    
+    in the config one should add the following parameters:
+    
+    psi: importance of the heuristic part,  a number in [0,1]
+    nu: bias on the heuristic part. An integer (usually 1,5 or 10). 
+    model_based: boolean, should we use a model of the environment or not
+    model: the model to be used in the forward action selection
+    rho: pheromone discount factor.
     
     '''
     
@@ -245,7 +254,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
         a= self.act(s)
         aold = a
         sold = s
-        
+        self.cum_reward = 0
         for t in range(config["n_iter"]):
             
             if self.decrease_exploration:
@@ -259,6 +268,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 self.current_trajectory[str(s*1.0)+"_"+str(a*1.0)] = dict #since it is an hashmap, now it will not store the state more than once
                 
                 sp, reward, done, _ = env.step(a)
+                self.cum_reward = self.cum_reward + reward
                 
                 if self.model_based:      
                     ap= self.act2(sp)
@@ -308,6 +318,7 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 self.current_trajectory[str(s*1.0)+"_"+str(a*1.0)] = dict
                 
                 sp, reward, done, _ = env.step(a)
+                self.cum_reward = self.cum_reward + reward
                 
                 if self.model_based:      
                     ap= self.act2(sp)
@@ -351,6 +362,8 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 #print np.sum((1-self.rho)*self.pheromone_trace[ap,index_future])#/self.num_tiling
                 
                 if self.heuristic_activate:
+
+
                     #Reasoning at the transition level, we have to take present, past and future
                     pher_past_value= np.sum(self.pheromone_trace[aold,index_past])
                     pher_present_value=np.sum(self.pheromone_trace[a,index_present])#
@@ -384,6 +397,12 @@ class HAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
                 
             
             if done: # something wrong in MC
+
+                if self.cum_reward<0:
+                    t = np.abs(self.cum_reward)
+                else:
+                    t=2 - 1/self.cum_reward #small impossible number
+
                 self.last_steps.append(t)
                 #if it is succesfful.
                 result = self.success_invariant(t=t,env=env)

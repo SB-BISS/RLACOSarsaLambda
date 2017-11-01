@@ -16,7 +16,9 @@ class PAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
     
     (PA stands for Potential Accelerated, as opposed to Heuristic Accelerated)
     This agent implements a Potential Based Reward Shaping model where the potential depends on
-    pheromone traces calculated with the trajectories of the agent. The pheromone trace can be dynamic or static.
+    pheromone traces calculated with the trajectories of the agent. 
+    The potential can be multi-step and the steps can be hard and always select the best pheromone path, or soft and therefore proceed probabilistically.
+    The pheromone trace can be dynamic or static.
     if static, the algorithm requires to load the pheromone trace and the associated tile coder. If dynamic the algorithm
     keeps updating the trace after each successful trajectory.
     The dynamic version is not very effective the MDP process is too slow at updating the state-action values. 
@@ -29,17 +31,20 @@ class PAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
         #    raise UnsupportedSpace('Observation space {} incompatible with {}. (Only supports Discrete observation spaces.)'.format(observation_space, self))
         #if not isinstance(action_space, discrete.Discrete):
         #    raise UnsupportedSpace('Action space {} incompatible with {}. (Only supports Discrete action spaces.)'.format(action_space, self))
-        super(self.__class__, self).__init__(observation_space_mins, observation_space_maxs, actions, num_tiles_l, num_tilings_l,  **userconfig)
+        ApproximatedSarsaLambdaAgent.__init__(self,observation_space_mins, observation_space_maxs, actions, num_tiles_l, num_tilings_l,  **userconfig)
         self.config['psi'] = 0.001
         self.config['rho'] = 0.9
+        self.config['n_stop'] = 1
         self.config["model_based"]=False
         self.config["model"] = None
+        self.config["Plan_strategy"] = "hard"
         self.config['Pheromone_strategy'] = "hard"
         self.config['nu'] =1
         self.config["descrease_exploration_rate"] = 0.99
         conf = userconfig.get("my_config")
         self.config.update(conf)
         self.model = self.config["model"]
+        self.n_stop = self.config["n_stop"]
         self.heuristic_dynamic = self.config["heuristic_dynamic"]
         self.model_based= self.config["model_based"]
         self.rho = self.config["rho"]
@@ -82,27 +87,71 @@ class PAApproximatedSarsaLambdaAgent(ApproximatedSarsaLambdaAgent):
             eps = self.config["eps"]
         # epsilon greedy.
         
-        #previous_pheromone_value =
-        
-        #previous_values_pheromones = []  
-        observations = []
-        possible_actions_values_pheromones = []
-        
-        f_obs = self.model.next_state(observation,action) #so this is my next state
-          
-        
-        pheromone_present= np.sum(self.select_state_action_weights(self.pheromone_trace,observation,action))
-        pheromone_future_transition=[]
-            
-        for f_act in range(self.action_n): # I sum all the pheromone in the next state !
-                pheromone_future_transition.append(np.sum(self.select_state_action_weights(self.pheromone_trace,f_obs,f_act)))
-        possible_actions_values_pheromones.append(np.max(pheromone_future_transition)+pheromone_present) # as a measure of the variability        
-              
-        action = np.argmax(possible_actions_values_pheromones)
-                   
+        p_pre = (np.sum(self.select_state_action_weights(self.pheromone_trace,observation,action)))                    
             #action = np.random.randint(0,3)
-        return possible_actions_values_pheromones[action]
+        
+        if self.config["Plan_strategy"] == "hard":  
+            val= self.recursive_plan(observation,action,pres=p_pre,n_stop=self.n_stop)
+        else:
+            val= self.recursive_soft_plan(observation,action,pres=p_pre,n_stop=self.n_stop)
+            
+        return val
     
+    
+    def recursive_plan(self,observation,action,accumulator = 0, n=0,n_stop=1,pres=0):
+        f_obs = self.model.next_state(observation,action) #so this is my next state
+        
+        pheromone_future = []
+        for f_act in range(self.action_n): # I sum all the pheromone in the next state !
+                pheromone_future.append(np.sum(self.select_state_action_weights(self.pheromone_trace,f_obs,f_act)))
+    
+        a =  np.argmax(pheromone_future)       
+       
+        
+        accumulator += np.power(self.rho,n)*(self.rho*pheromone_future[a] - pres)
+        p_pre = pheromone_future[a]
+        #print accumulator
+        if n == n_stop:
+            return accumulator
+        
+        n_new = n+1
+        return self.recursive_plan(f_obs,a,accumulator,n_new,n_stop,pres=p_pre) #so this is my next state
+    
+    
+    
+    def recursive_soft_plan(self,observation,action,accumulator = 0, n=0,n_stop=1,pres=0):
+        f_obs = self.model.next_state(observation,action) #so this is my next state
+        
+        pheromone_future = []
+        for f_act in range(self.action_n): # I sum all the pheromone in the next state !
+                pheromone_future.append(np.sum(self.select_state_action_weights(self.pheromone_trace,f_obs,f_act)))
+        
+        probabilities = np.zeros(len(pheromone_future))
+        for i in range(len(pheromone_future)):
+            probabilities[i] = np.exp(pheromone_future[i])
+        probabilities =probabilities/np.sum(probabilities)
+       
+        
+        val_r = np.random.random()
+        
+        cumsumprobs = 0
+        a=0
+        #probabilistic choice
+        for z in range(len(probabilities)):
+            cumsumprobs = cumsumprobs + probabilities[z]
+            if val_r <= cumsumprobs:
+                a= z
+        
+        accumulator += np.power(self.rho,n)*(self.rho*pheromone_future[a] - pres)
+        p_pre = pheromone_future[a]
+        #print accumulator
+        if n == n_stop:
+            return accumulator
+        
+        n_new = n+1
+        return self.recursive_plan(f_obs,a,accumulator,n_new,n_stop,pres=p_pre) #so this is my next state
+    
+                
     
 
     def learn(self, env, rend = False):

@@ -7,7 +7,9 @@ from tilecoding.representation import TileCoding
 
 
 
-'''
+    
+class ApproximatedSarsaLambdaAgent(object):
+    '''
     @author Stefano Bromuri
     Agent implementing approximated Sarsa-learning with traces.
     observation_space_mins = an ordered array with minimum values for each of the features of the exploration space
@@ -16,12 +18,22 @@ from tilecoding.representation import TileCoding
     num tilings = how many overlapping tilings per dimension.
     
     Replacing traces model, typical replacing traces with tile coding
-    TrueOnline Model, True online model!
+    TrueOnline Model, True online model.
+    
+    In the user configuration, several things can be set, have a look at the following
+    "Strategy" : "Replacing", Strategy. Two available at the moment, Replacing and True Online Traces
+    "decrease_exploration_rate": 0.99, parameter to decrease the exploration rate
+    "decrease_exploration" : True, this parameter defines if the exploration should tend to zero
+    "learning_rate" : 0.5,  this is a default learning rate, alpha
+    "eps": 0.025,  Epsilon in epsilon greedy policies
+    "lambda":0.9,  this is for the discount factor of the traces.
+    "discount": 1, this is gamma
+    "n_iter": 500  this is a default number of iterations the agent runs
+    
+    
     
     '''
 
-class ApproximatedSarsaLambdaAgent(object):
-    
     
     def __init__(self, observation_space_mins, observation_space_maxs, actions, num_tiles_l, num_tilings_l,  **userconfig):
         #if not isinstance(observation_space, discrete.Discrete):
@@ -30,6 +42,7 @@ class ApproximatedSarsaLambdaAgent(object):
         #    raise UnsupportedSpace('Action space {} incompatible with {}. (Only supports Discrete action spaces.)'.format(action_space, self))
         self.num_tiling = num_tilings_l[0]
         self.last_steps = []
+        self.cum_reward = 0
         self.action_space = actions
         self.action_n = actions.n
         self.config = {
@@ -116,6 +129,8 @@ class ApproximatedSarsaLambdaAgent(object):
     def return_last_steps(self):
         return self.last_steps
     #the state here has multiple variables.
+    def return_cum_reward(self):
+        return self.cum_reward
 
     def learn(self, env, rend = False):
         config = self.config
@@ -133,7 +148,9 @@ class ApproximatedSarsaLambdaAgent(object):
         
         
         a = self.act(s)
-        
+
+        self.cum_reward = 0
+
         for t in range(config["n_iter"]):
             
             if self.decrease_exploration:
@@ -145,7 +162,9 @@ class ApproximatedSarsaLambdaAgent(object):
             
                 sp, reward, done, _ = env.step(a)
                 future = 0.0
-            
+                self.cum_reward = self.cum_reward +reward
+
+
                 #if not done:
                     #future = np.max(q[obs2.item()])
                 ap= self.act(sp)
@@ -173,8 +192,11 @@ class ApproximatedSarsaLambdaAgent(object):
                 a= ap
                 
             if self.strategy=="TrueOnline":  
-                
+
                 sp, reward, done, _ = env.step(a)
+                
+                self.cum_reward = self.cum_reward +reward
+                #print "aa" +str(reward)
                 #future = 0.0
             
                 #if not done:

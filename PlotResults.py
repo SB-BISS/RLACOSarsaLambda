@@ -31,6 +31,18 @@ with open("M3D_SH_TrueOnline_hardmodelTrue.pkl","rb") as f:
 
 
 
+#with open("Dyna_H_TrueOnline_hardmodelFalse.pkl","rb") as f:
+#    result_h = pickle.load(f)
+
+
+#with open("M3D_H_TrueOnline_hardmodelTrue.pkl","rb") as f:
+#    result_h = pickle.load(f)
+
+with open("Dyna_SH_TrueOnline_hardmodelFalse.pkl","rb") as f:
+    result_hm = pickle.load(f)
+
+
+
 print len(result_h)
 print len(result_h2)
 print len(result_hm)

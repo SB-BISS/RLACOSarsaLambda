@@ -2,6 +2,7 @@ import gym
 from gym import envs
 from agents import TabularSarsaAgent
 from agents import ApproximatedSarsaLambdaAgent
+from agents import APHARSSarsaLambdaAgent
 from agents import StaticHeuristicApproximatedSarsaLambdaAgent
 from agents import HAApproximatedSarsaLambdaAgent
 from static_heuristics.M3DHeuristic import M3DHeuristic 
@@ -29,17 +30,20 @@ discretizations = [4,4,4,4]
 
 config_heur = {  "Strategy" : "TrueOnline",
                                   "Pheromone_strategy": "hard",
+                                  "Plan_strategy": "hard",
+                                  "heuristic_dynamic": True,
                                   "decrease_exploration" : True,
                                   "descrease_exploration_rate": 0.9, #Mountain Car has a decaying eploration
                                   "learning_rate" : 0.5,
-                                  "psi": 0.01,
+                                  "psi": 0.1,
                                   "rho": 0.99,
                                   "eps": 0.5,
                                   "model": m3d_model(),
-                                  "model_based": True,
-                                  "nu":5,            # Epsilon in epsilon greedy policies
+                                  "model_based": False,
+                                  "nu":10,            # Epsilon in epsilon greedy policies
                                   "lambda":0.9,
                                   "discount": 1,
+                                  "n_stop": 10,
                                   "n_iter": env._max_episode_steps} 
 
 
@@ -62,9 +66,10 @@ for j in range(100):
     #heur = heur = LoadableHeuristic("M3DPher.pkl","M3DTrace.pkl",actions_number=5)
     config_heur["static_heuristic"] =heur
     
-    #ag = HAApproximatedSarsaLambdaAgent.HAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
-    ag = StaticHeuristicApproximatedSarsaLambdaAgent.StaticHeuristicApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
-    
+    #ag = HAApproximatedSarsaLambdaAgent.HAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[5], my_config=config_heur)
+    #ag = StaticHeuristicApproximatedSarsaLambdaAgent.StaticHeuristicApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
+    ag = APHARSSarsaLambdaAgent.APHARSSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[5], my_config=config_heur)
+
     #ag = ApproximatedSarsaLambdaAgent.ApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[5], my_config=config_heur)
     
     
@@ -88,7 +93,7 @@ for j in range(100):
     time_result.append(times)
     dict_res["series"]=total_result
     dict_res["times"]=time_result
-    with open("M3D_simulation_true_online_static_heuristic2f.pkl", 'wb') as f:
+    with open("M3D_simulation_potential.pkl", 'wb') as f:
         pickle.dump(dict_res, f)#write everything there
     
     

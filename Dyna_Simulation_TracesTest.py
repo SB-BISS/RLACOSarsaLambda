@@ -3,6 +3,8 @@ from gym import envs
 from agents import TabularSarsaAgent
 from agents import ApproximatedSarsaLambdaAgent
 from agents import HAApproximatedSarsaLambdaAgent
+from agents import APHARSSarsaLambdaAgent
+from agents import PAApproximatedSarsaLambdaAgent
 from agents import StaticHeuristicApproximatedSarsaLambdaAgent
 import numpy as np
 import time
@@ -190,10 +192,10 @@ def test3():
                                       "decrease_exploration" : False, #Mountain Car has a decaying eploration
                                       "learning_rate" : 0.1,
                                       "model_based":False,
-                                      "psi": 0.1,
+                                      "psi": 0.9,
                                       "rho": 0.99,
                                       "eps": 0.1,
-                                      "nu":1,            # Epsilon in epsilon greedy policies
+                                      "nu":10,            # Epsilon in epsilon greedy policies
                                       "lambda":0.9,
                                       "discount": 0.99,
                                       "n_iter": env._max_episode_steps} 
@@ -228,9 +230,61 @@ def test3():
         time_result.append(times)
         dict_res["series"]=total_result
         dict_res["times"]=time_result
-        with open("Maze_simulation_true_online_heuristics_hard_final.pkl", 'wb') as f:
+        with open("Indep_test.pkl", 'wb') as f:
             pickle.dump(dict_res, f)
                
+
+
+def test4():
+ 
+
+    config_heur = {  "Strategy" : "TrueOnline",
+                                  "Pheromone_strategy": "hard",
+                                  "Plan_strategy": "hard",
+                                  "decrease_exploration" : False, #Mountain Car has a decaying eploration
+                                  "learning_rate" : 0.1,
+                                  "psi": 0.3,
+                                  "heuristic_dynamic":True,
+                                  "model": dyna_model(),
+                                  "model_based":True,
+                                  "rho": 0.99,
+                                  "eps": 0.1,
+                                  "nu":10,            # Epsilon in epsilon greedy policies
+                                  "n_stop":0, #zero would be a normal Potential Based RS
+                                  "lambda":0.9,
+                                  "discount": 0.99,
+                                  "n_iter": env._max_episode_steps}  
+    
+    
+    total_result = []
+    time_result= []
+    dict_res = {"series" : total_result,"times":time_result }
+    
+    for j in range(100):
+        print j
+   
+        ag = APHARSSarsaLambdaAgent.APHARSSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
+    
+        res = []
+        times = []
+        for i in range(200):
+            rend = False
+            
+            time_before = time.time()
+            ag.learn(env,rend)
+            res= ag.return_last_steps()
+            time_after = time.time()
+            time_req = time_after - time_before
+            times.append(time_req)
+            print res[-1]
+        total_result.append(res)
+        time_result.append(times)
+        dict_res["series"]=total_result
+        dict_res["times"]=time_result
+        with open("Indep_test.pkl", 'wb') as f:
+            pickle.dump(dict_res, f)
+
+
 
 
 
@@ -241,10 +295,10 @@ def test_dump_trace():
                                       "learning_rate" : 0.1,
                                       "model_based":False,
                                       "model":dyna_model(),
-                                      "psi": 0.3,
+                                      "psi": 0.01,
                                       "rho": 0.99,
                                       "eps": 0.1,
-                                      "nu":10,            # Epsilon in epsilon greedy policies
+                                      "nu":1,            # Epsilon in epsilon greedy policies
                                       "lambda":0.9,
                                       "discount": 0.9,
                                       "n_iter": env._max_episode_steps} 
@@ -278,7 +332,7 @@ def test_dump_trace():
 
 
 #test_dump_trace()
-test1()
+test4()
 #test2()
 #test_dump_trace()
 #test_heuristic()

@@ -4,6 +4,7 @@ from agents import TabularSarsaAgent
 from agents import ApproximatedSarsaLambdaAgent
 from agents import HAApproximatedSarsaLambdaAgent
 from agents import PAApproximatedSarsaLambdaAgent
+from agents import APHARSSarsaLambdaAgent 
 
 from agents import StaticHeuristicApproximatedSarsaLambdaAgent 
 from static_heuristics.LoadableHeuristic import LoadableHeuristic #import LoadableHeuristic
@@ -38,17 +39,19 @@ config = {  "Strategy" : "TrueOnline",
 
 config_heur = {  "Strategy" : "TrueOnline",
                                   "Pheromone_strategy": "hard",
+                                  "Plan_strategy": "soft",
                                   "decrease_exploration" : True, #Mountain Car has a decaying eploration
                                   "learning_rate" : 0.5,
-                                  "psi": 0.3,
-                                  "heuristic_dynamic":False,
+                                  "psi": 0.0,
+                                  "heuristic_dynamic":True,
                                   "model": mc_model.mc_model(),
-                                  "model_based":False,
+                                  "model_based":True,
                                   "rho": 0.99,
                                   "eps": 0.025,
-                                  "nu":10,            # Epsilon in epsilon greedy policies
+                                  "nu":0,            # Epsilon in epsilon greedy policies
                                   "lambda":0.9,
                                   "discount": 1,
+                                  "n_stop":3, #Potential steps
                                   "n_iter": env._max_episode_steps} 
 
 
@@ -71,7 +74,8 @@ for j in range(100):
     
     #Change the agent here.
     #ag = HAApproximatedSarsaLambdaAgent.HAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
-    ag = PAApproximatedSarsaLambdaAgent.PAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
+    #ag = PAApproximatedSarsaLambdaAgent.PAApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
+    ag = APHARSSarsaLambdaAgent.APHARSSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
     
     #heur = MountainCarHeuristic(model= mc_model.mc_model(),actions_number=3)
     
@@ -79,9 +83,9 @@ for j in range(100):
     #config_heur["static_heuristic"] =heur
     #ag = StaticHeuristicApproximatedSarsaLambdaAgent.StaticHeuristicApproximatedSarsaLambdaAgent(obs_mins,obs_maxs,env.action_space,discretizations,[10], my_config=config_heur)
     pher_trace = pickle.load( open( "MountainCarPher.pkl", "rb" ) )
-    ag.set_pheromone_trace(pher_trace)
+    #ag.set_pheromone_trace(pher_trace)
     tc = pher_trace = pickle.load( open( "MountainCarTrace.pkl", "rb" ) )
-    ag.set_tilecoder(tc)
+    #ag.set_tilecoder(tc)
     
     
     res = []
@@ -97,6 +101,7 @@ for j in range(100):
         times.append(time_req)
         print res[-1]
         
+       
         #if i==199:
             #ag.dump_pher_trace("MountainCarPher.pkl","MountainCarTrace.pkl")
         
@@ -104,7 +109,7 @@ for j in range(100):
     time_result.append(times)
     dict_res["series"]=total_result
     dict_res["times"]=time_result
-    with open("Mountain_car_simulation_true_online_potential_pheromone_heuristic3.pkl", 'wb') as f:
+    with open("Mountain_car_simulation_true_online_AP-HARS-2.pkl", 'wb') as f:
         pickle.dump(dict_res, f)#write everything there
     
     

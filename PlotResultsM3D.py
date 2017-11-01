@@ -83,6 +83,37 @@ def savitzky_golay(y, window_size=5, order=1, deriv=0, rate=1):
 
 
 
+def set_dyna_rs_series():
+    with open("Maze_simulation_true_online_no_heuristics_final.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series = dict0["series"]
+        times = dict0["times"]
+    with open("Maze_simulation_true_online_heuristics_hard_final.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series2 = dict0["series"]
+        times2 = dict0["times"]
+    with open("Maze_simulation_true_online_heuristics_hard_model_based_final.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series3 = dict0["series"]
+        times3 = dict0["times"]
+    with open("Indep_test2.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series4 = dict0["series"]
+        times4 = dict0["times"]
+    with open("Maze_simulation_true_online_static_pheromone_heuristic.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series5 = dict0["series"]
+        times5 = dict0["times"]
+    #Indep_test
+    with open("Indep_test.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series5 = dict0["series"]
+        times5 = dict0["times"]        
+    return series,series,series,series,series5,times,times,times,times,times5
+
+
+
+
 def set_maze_series():
     with open("Maze_simulation_true_online_no_heuristics_final.pkl", "rb") as f:
         dict0 = pickle.load(f)
@@ -104,8 +135,11 @@ def set_maze_series():
         dict0 = pickle.load(f)
         series5 = dict0["series"]
         times5 = dict0["times"]
-    
-            
+    #Indep_test
+    with open("Indep_test.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series5 = dict0["series"]
+        times5 = dict0["times"]        
     return series,series2,series3,series4,series5,times,times2,times3,times4,times5
 
 
@@ -177,13 +211,47 @@ def set_mc_series():
         dict4 = pickle.load(f)
         series4 = dict4["series"]
         times4= dict4["times"]
-    
+   
     with open("Mountain_car_simulation_true_online_static_pheromone_heuristic.pkl", "rb") as f:
         dict5 = pickle.load(f)
         series5 = dict5["series"]
         times5= dict5["times"]
-        
+    with open("Mountain_car_simulation_true_online_AP-HARS.pkl", "rb") as f:
+        dict5 = pickle.load(f)
+        series5 = dict5["series"]
+        times5= dict5["times"]
+    return series,series5,series3,series5,series5,times,times5,times3,times5,times5
+
+
+def set_mc_series_aphars():
+    with open("Mountain_car_simulation_true_online_no_heuristics_final.pkl", "rb") as f:
+        dict0 = pickle.load(f)
+        series = dict0["series"]
+        times = dict0["times"]
+    with open("Mountain_car_simulation_true_online_heuristics_hard_final.pkl", "rb") as f:
+        dict2 = pickle.load(f)
+        series2 = dict2["series"]
+        times2= dict2["times"]
+    with open("Mountain_car_simulation_true_online_heuristics_hard_model_based_final.pkl", "rb") as f:
+        dict3 = pickle.load(f)
+        series3 = dict3["series"]
+        times3= dict3["times"]
+    with open("Mountain_car_simulation_true_online_AP-HARS-2.pkl", "rb") as f:
+        dict2 = pickle.load(f)
+        series2 = dict2["series"]
+        times2= dict2["times"]
+   
+    with open("Mountain_car_simulation_true_online_AP-HARS.pkl", "rb") as f:
+        dict4 = pickle.load(f)
+        series4 = dict4["series"]
+        times4= dict4["times"]
+    with open("Mountain_car_simulation_true_online_AP-HARS-1.pkl", "rb") as f:
+        dict5 = pickle.load(f)
+        series5 = dict5["series"]
+        times5= dict5["times"]
     return series,series2,series3,series4,series5,times,times2,times3,times4,times5
+
+
 
 
 def set_mc_series_rep():
@@ -196,7 +264,7 @@ def set_mc_series_rep():
     return series,series2,series3
 
 
-series,series2,series3,series4,series5, t,t2,t3,t4,t5=set_m3d_series()
+series,series2,series3,series4,series5, t,t2,t3,t4,t5=set_dyna_rs_series()
 
 
 def find_best_results(time,series):
@@ -365,7 +433,10 @@ e=plt.fill_between(range(len(filtered_mean_heur_p)),filtered_mean_heur_p-2*std_h
 
 #plt.legend(["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","RS-BACKWARD","RS-SARSA($\lambda$)+Pheromone"])
 
-plt.legend( ["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","AP-HARL-FORWARD","HA-SARSA($\lambda$)","HA-SARSA($\lambda$)+Pheromone"])
+#plt.legend( ["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","AP-HARL-FORWARD","HA-SARSA($\lambda$)","HA-SARSA($\lambda$)+Pheromone"])
+
+
+plt.legend( ["Approximated Sarsa($\lambda$)","AP-HARL-BACKWARD","AP-HARL-FORWARD","AP-HARS-Static","PA-HARS-1-step"])
 plt.grid(b=True, which='major', color='black', linestyle='-')
 plt.grid(b=True, which='minor', color='black', linestyle='--')
 plt.minorticks_on()

@@ -1,4 +1,14 @@
 # RLACOSarsaLambda
+
+This is the code for the paper:
+
+Dynamic heuristic acceleration of linearly approximated
+SARSA($\lambda$): using ant colony optimization to learn heuristics dynamically
+
+Link to paper
+https://rdcu.be/bAasY
+
+
 GYM based Reinforcement learning library that connects Ant colony optimization and Sarsa Lambda.
 This library includes SARSA lambda agents programmed with tabular and tile coding approximations.
 
